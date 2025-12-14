@@ -153,8 +153,16 @@ h2 {{ font-size: 2.5rem; color: #111; margin-bottom: 20px; text-align: center; f
 .section-subtitle {{ text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6; }}
 p {{ line-height: 1.6; color: #555; }}
 section {{ margin-bottom: 100px !important; }}
+
 /* HERO SECTION */
-.hero {{ width: 100%; position: relative; overflow: hidden; background-color: white; }}
+/* MODIFIED: Added margin-bottom 0px to fix bar gap issue */
+.hero {{ 
+    width: 100%; 
+    position: relative; 
+    overflow: hidden; 
+    background-color: white; 
+    margin-bottom: 0px !important;
+}}
 .hero-content-wrapper {{ max-width: 1800px; margin: 0 auto; padding: 100px 5% 150px 5%; display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 10; }}
 .hero::before {{
 content: ''; position: absolute; top: 0; left: 0; width: 35%; height: 600px;
@@ -284,7 +292,7 @@ LANDING_BODY = f"""
 <section class="hero">
 <div class="hero-content-wrapper">
 <div class="hero-text">
-<h1>Automated Leverage.<br>Zero Emotion.</h1>
+<h1>3x Returns.<br>Without the Risk.</h1>
 <p class="hero-p">
 Professional-grade algorithmic signals for <strong>SPXL (3x)</strong> and <strong>SSO (2x)</strong>. 
 We capture the upside of leverage while systematically managing the volatility decay. 
@@ -501,15 +509,24 @@ div[data-testid="column"]:nth-of-type(2) {{
     text-decoration: none;
     font-weight: 500;
     color: white !important; /* Forces text to be white */
-    font-size: 1.1rem; /* Increased size by 50% */
+    font-size: 1.2rem; /* MODIFIED: Increased size by 50% */
 }}
 .google-btn {{ background-color: #4285F4; }}
 .facebook-btn {{ background-color: #3b5998; }}
 .social-btn:hover {{ opacity: 0.9; color: white !important; }}
 
 /* MODIFIED: Increased font size by 50% */
-.login-header {{ font-size: 2.5rem; font-weight: 600; margin-bottom: 20px; color: #333; }}
+.login-header {{ font-size: 2.8rem; font-weight: 600; margin-bottom: 20px; color: #333; }}
 .divider {{ margin: 20px 0; border-top: 1px solid #eee; }}
+
+/* Increase size of Streamlit inputs in the login card */
+div[data-testid="column"]:nth-of-type(2) p {{
+    font-size: 1.2rem !important; /* Labels */
+}}
+div[data-testid="column"]:nth-of-type(2) input {{
+    font-size: 1.1rem !important; /* Input text */
+    padding: 1rem; /* Make boxes taller */
+}}
 </style>
 """
 
