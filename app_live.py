@@ -8,13 +8,7 @@ st.set_page_config(layout="wide", page_title="Benchmark3x")
 # --- OPTIMIZATION: CACHE CHART GENERATION ---
 @st.cache_resource
 def ensure_chart_exists():
-    """
-    Generates the downturn_chart.jpg only if it doesn't exist.
-    Cached to prevent re-running Matplotlib logic on every app rerun.
-    """
     chart_path = "downturn_chart.jpg"
-    
-    # If it exists, skip generation to save speed
     if os.path.exists(chart_path):
         return
 
@@ -22,18 +16,13 @@ def ensure_chart_exists():
         import matplotlib.pyplot as plt
         import numpy as np
 
-        # Setup for a "Regime Filter" style chart
         np.random.seed(101) 
         days = 2000
         x = np.arange(days)
-        
-        # Generate a "Market" line
         returns = np.random.normal(0.0006, 0.012, days)
         price_path = 1000 * np.cumprod(1 + returns)
 
         plt.figure(figsize=(10, 5)) 
-        
-        # Plot
         plt.plot(x, price_path, color='#111111', linewidth=1.2, label='Market Index')
         plt.axvspan(200, 350, color='#e74c3c', alpha=0.15, label='Volatility Regime (Cash)')
         plt.axvspan(900, 1000, color='#e74c3c', alpha=0.15)
@@ -41,7 +30,6 @@ def ensure_chart_exists():
         plt.axvspan(600, 650, color='#f1c40f', alpha=0.15, label='Choppy/Warning')
         plt.axvspan(1850, 1900, color='#f1c40f', alpha=0.15)
 
-        # Styling 
         plt.title("Historical Regime Detection (2015-2025)", fontsize=12, fontweight='bold', color='#333', loc='left', pad=15)
         plt.legend(loc='upper left', fontsize=8, frameon=True, fancybox=False, framealpha=0.95)
         
@@ -60,36 +48,7 @@ def ensure_chart_exists():
     except Exception as e:
         st.warning(f"Could not generate chart: {e}")
 
-# Trigger chart generation
 ensure_chart_exists()
-
-# --- CSS OVERRIDES (STREAMLIT INTERNAL FIXES) ---
-# Kept separate because this addresses Streamlit-specific layout issues
-st.markdown("""
-<style>
-    /* Reset Streamlit's default padding/margins */
-    .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-        padding-left: 0rem !important;
-        padding-right: 0rem !important;
-        margin: 0px !important;
-        max-width: 100% !important;
-        overflow: visible !important;
-    }
-    
-    /* Hide Streamlit elements */
-    header[data-testid="stHeader"] { visibility: hidden; height: 0px; }
-    footer { display: none !important; }
-    .main .block-container { margin-top: -60px !important; }
-    
-    /* Ensure main app container handles scroll but allows sticky children */
-    .stApp {
-        overflow-y: auto !important;
-        background-color: white;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # --- OPTIMIZATION: CACHE IMAGE LOADING ---
 @st.cache_data
@@ -102,36 +61,51 @@ def get_base64_image(image_path):
 # --- LOAD LOCAL IMAGES ---
 logo_data = get_base64_image("logo_R1.jpg")
 logo_src = f"data:image/jpeg;base64,{logo_data}" if logo_data else ""
-
 computer_data = get_base64_image("computer.jpg")
 computer_src = f"data:image/jpeg;base64,{computer_data}" if computer_data else "https://via.placeholder.com/800x600.png?text=computer.jpg+not+found"
-
 chart_data = get_base64_image("downturn_chart.jpg")
 chart_src = f"data:image/jpeg;base64,{chart_data}" if chart_data else "https://via.placeholder.com/600x350.png?text=Chart+Generation+Failed"
-
 gears_data = get_base64_image("gears.png")
 gears_src = f"data:image/png;base64,{gears_data}" if gears_data else ""
 
-# --- PART 1: LANDING PAGE CSS (MODULARIZED) ---
-# Separated from HTML for readability. No indentation to prevent Markdown code blocks.
-LANDING_CSS = f"""
+# --- SHARED HTML: HEADER ---
+HEADER_HTML = f"""
+<div class="sticky-header" id="top">
+<a href="?page=landing" target="_self" class="logo-container">
+<img src="{logo_src}" class="logo-img" alt="Benchmark3x" />
+</a>
+<nav>
+<a href="?page=landing#model" target="_self">Model</a>
+<a href="?page=landing#pricing" target="_self">Pricing</a>
+<a href="?page=landing#faq" target="_self">FAQ</a>
+<a href="?page=login" target="_self" class="nav-login"><span class="lock-icon">🔒</span> Sign In</a>
+</nav>
+</div>
+"""
+
+# --- CSS: GLOBAL & SHARED ---
+SHARED_CSS = f"""
 <style>
-/* LANDING PAGE STYLES */
-#landing-root {{
-font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-color: #333;
-background-color: #ffffff;
+/* Reset Streamlit's default padding/margins */
+.block-container {{
+padding-top: 0rem !important;
+padding-bottom: 0rem !important;
+padding-left: 0rem !important;
+padding-right: 0rem !important;
+margin: 0px !important;
+max-width: 100% !important;
+overflow: visible !important;
 }}
-/* UTILITIES */
-.orange {{ color: #f5a623; }}
-.text-center {{ text-align: center; }}
-.container {{ max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative; z-index: 2; }}
-h2 {{ font-size: 2.5rem; color: #111; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -1px; }}
-.section-subtitle {{ text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6; }}
-p {{ line-height: 1.6; color: #555; }}
-/* Global Section Spacing */
-section {{ margin-bottom: 100px !important; }}
-/* HEADER - STICKY CONFIGURATION */
+/* Hide Streamlit elements */
+header[data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
+footer {{ display: none !important; }}
+.main .block-container {{ margin-top: -60px !important; }}
+/* Global Font */
+body, .stApp {{
+font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+overflow-y: auto !important;
+}}
+/* HEADER STYLES */
 .sticky-header {{
 background-color: #000000;
 padding: 20px 4%; 
@@ -147,92 +121,121 @@ z-index: 9999;
 .logo-container {{ display: flex; align-items: center; text-decoration: none; cursor: pointer; }}
 .logo-img {{ height: 90px; width: auto; display: block; mix-blend-mode: screen; }}
 nav {{ display: flex; gap: 30px; align-items: center; }}
+/* MODIFIED: Increased size, white color, no underline */
 nav a {{
-color: #ccc; text-decoration: none; 
-font-size: 1.35rem; font-weight: 500;
-transition: color 0.3s; display: flex; align-items: center; cursor: pointer;
+color: #ffffff !important; 
+text-decoration: none !important; 
+font-size: 1.6rem; 
+font-weight: 500;
+transition: color 0.3s; 
+display: flex; 
+align-items: center; 
+cursor: pointer;
 }}
-nav a:hover {{ color: #f5a623; }}
+nav a:hover {{ color: #f5a623 !important; }}
 .nav-login {{ color: #fff; font-weight: 600; }}
 .lock-icon {{ margin-right: 6px; font-size: 1.2rem; }}
+</style>
+"""
+
+# --- PAGE 1: LANDING PAGE CONTENT ---
+LANDING_CSS = f"""
+<style>
+/* LANDING SPECIFIC STYLES */
+#landing-root {{
+background-color: #ffffff;
+color: #333;
+}}
+.orange {{ color: #f5a623; }}
+.text-center {{ text-align: center; }}
+.container {{ max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative; z-index: 2; }}
+h2 {{ font-size: 2.5rem; color: #111; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -1px; }}
+.section-subtitle {{ text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6; }}
+p {{ line-height: 1.6; color: #555; }}
+section {{ margin-bottom: 100px !important; }}
 /* HERO SECTION */
-.hero {{
-width: 100%; 
-position: relative;
-overflow: hidden;
-background-color: white;
-}}
-.hero-content-wrapper {{
-max-width: 1800px;
-margin: 0 auto;
-padding: 100px 5% 150px 5%;
-display: flex; 
-justify-content: space-between; 
-align-items: flex-start;
-position: relative;
-z-index: 10;
-}}
-/* HERO BACKGROUND EFFECTS */
+.hero {{ width: 100%; position: relative; overflow: hidden; background-color: white; }}
+.hero-content-wrapper {{ max-width: 1800px; margin: 0 auto; padding: 100px 5% 150px 5%; display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 10; }}
 .hero::before {{
-content: '';
-position: absolute;
-top: 0; left: 0; width: 35%; height: 600px;
-background-image: radial-gradient(circle, #d0d0d0 5px, transparent 6px);
-background-size: 30px 30px;
-clip-path: polygon(0 0, 100% 0, 0 100%);
-mask-image: linear-gradient(135deg, black 20%, transparent 100%);
--webkit-mask-image: linear-gradient(135deg, black 20%, transparent 100%);
-opacity: 0.6; z-index: 1; pointer-events: none;
+content: ''; position: absolute; top: 0; left: 0; width: 35%; height: 600px;
+background-image: radial-gradient(circle, #d0d0d0 5px, transparent 6px); background-size: 30px 30px;
+clip-path: polygon(0 0, 100% 0, 0 100%); mask-image: linear-gradient(135deg, black 20%, transparent 100%);
+-webkit-mask-image: linear-gradient(135deg, black 20%, transparent 100%); opacity: 0.6; z-index: 1; pointer-events: none;
 }}
-.hero-text {{ 
-max-width: 45%; 
-margin-top: 10px; 
-margin-left: 100px; 
-position: relative; 
+/* RESTORED: THE BOTTOM BARS */
+.hero::after {{
+content: ''; position: absolute; bottom: 0; left: 33%; width: 100%; height: 300px;
+background-image: 
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)),
+linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9));
+background-size: 
+40px 25%, 40px 55%, 40px 40%, 40px 75%, 40px 90%, 
+40px 45%, 40px 20%, 40px 60%, 40px 85%, 40px 35%, 
+40px 50%, 40px 30%, 40px 70%, 40px 45%, 40px 95%,
+40px 55%, 40px 25%, 40px 65%, 40px 40%, 40px 80%,
+40px 60%, 40px 35%, 40px 75%, 40px 20%, 40px 50%,
+40px 85%, 40px 45%, 40px 65%, 40px 30%, 40px 70%,
+40px 90%, 40px 50%, 40px 35%, 40px 60%, 40px 25%,
+40px 80%, 40px 40%, 40px 55%, 40px 30%, 40px 65%;
+background-position: 
+0px bottom, 80px bottom, 160px bottom, 240px bottom, 320px bottom, 
+400px bottom, 480px bottom, 560px bottom, 640px bottom, 720px bottom, 
+800px bottom, 880px bottom, 960px bottom, 1040px bottom, 1120px bottom,
+1200px bottom, 1280px bottom, 1360px bottom, 1440px bottom, 1520px bottom,
+1600px bottom, 1680px bottom, 1760px bottom, 1840px bottom, 1920px bottom,
+2000px bottom, 2080px bottom, 2160px bottom, 2240px bottom, 2320px bottom,
+2400px bottom, 2480px bottom, 2560px bottom, 2640px bottom, 2720px bottom,
+2800px bottom, 2880px bottom, 2960px bottom, 3040px bottom, 3120px bottom;
+background-repeat: no-repeat; z-index: 1; pointer-events: none;
 }}
+.hero-text {{ max-width: 45%; margin-top: 10px; margin-left: 100px; position: relative; }}
 h1 {{ font-size: 3.8rem; line-height: 1.1; color: #111; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }}
 .hero-p {{ font-size: 1.2rem; margin-bottom: 30px; max-width: 520px; color: #555; }}
-/* UPDATED: Button Styling for Anchors */
-.btn-primary {{
-display: inline-block; background-color: #f5a623; color: white;
-padding: 14px 35px; text-decoration: none; border-radius: 4px;
-font-weight: 700; font-size: 1rem; transition: transform 0.2s, background-color 0.2s; border: none; cursor: pointer;
-text-align: center;
-}}
+.btn-primary {{ display: inline-block; background-color: #f5a623; color: white; padding: 14px 35px; text-decoration: none; border-radius: 4px; font-weight: 700; font-size: 1rem; transition: transform 0.2s, background-color 0.2s; border: none; cursor: pointer; text-align: center; }}
 .btn-primary:hover {{ transform: translateY(-2px); background-color: #e0961f; }}
-.computer-graphic {{
-width: 50%; border-radius: 12px;
-box-shadow: 0 30px 60px rgba(0,0,0,0.25);
-object-fit: cover;
-transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
-transition: transform 0.5s ease;
-}}
+.computer-graphic {{ width: 50%; border-radius: 12px; box-shadow: 0 30px 60px rgba(0,0,0,0.25); object-fit: cover; transform: perspective(1000px) rotateY(-5deg) rotateX(2deg); transition: transform 0.5s ease; }}
 .computer-graphic:hover {{ transform: perspective(1000px) rotateY(0deg); }}
 /* MODEL SECTION */
-#model {{ 
-background-color: #f8f9fa; 
-border-top: 1px solid #eee; 
-padding-top: 60px; 
-padding-bottom: 80px; 
-scroll-margin-top: 60px; 
-width: 100%;
-position: relative; 
-overflow: hidden;
-}}
-#model::before {{
-content: '';
-position: absolute;
-top: -15%; right: -15%;
-width: 62.5%; height: 125%; 
-background-image: url('{gears_src}');
-background-repeat: no-repeat;
-background-position: center right; 
-background-size: contain; 
-opacity: 0.05; 
-filter: grayscale(100%);
-pointer-events: none; 
-z-index: 0; 
-}}
+#model {{ background-color: #f8f9fa; border-top: 1px solid #eee; padding-top: 60px; padding-bottom: 80px; scroll-margin-top: 60px; width: 100%; position: relative; overflow: hidden; }}
+#model::before {{ content: ''; position: absolute; top: -15%; right: -15%; width: 62.5%; height: 125%; background-image: url('{gears_src}'); background-repeat: no-repeat; background-position: center right; background-size: contain; opacity: 0.05; filter: grayscale(100%); pointer-events: none; z-index: 0; }}
 .model-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: start; position: relative; z-index: 2; }}
 .model-step {{ margin-bottom: 30px; display: flex; gap: 20px; }}
 .step-num {{ font-size: 2rem; font-weight: 800; color: #f5a623; min-width: 50px; line-height: 1; }}
@@ -241,24 +244,14 @@ z-index: 0;
 .stat-card {{ background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); text-align: center; }}
 .stat-val {{ font-size: 2.5rem; font-weight: 700; color: #000; display: block; margin-bottom: 5px; }}
 .stat-label {{ font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }}
-.math-box {{
-background-color: #fff; padding: 25px; border-radius: 8px;
-border-left: 4px solid #f5a623; margin-top: 20px; font-size: 0.95rem;
-}}
-.chart-container {{
-margin-top: 25px; background: #fff; padding: 15px;
-border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); text-align: center;
-}}
+.math-box {{ background-color: #fff; padding: 25px; border-radius: 8px; border-left: 4px solid #f5a623; margin-top: 20px; font-size: 0.95rem; }}
+.chart-container {{ margin-top: 25px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); text-align: center; }}
 .chart-img {{ width: 100%; height: auto; border-radius: 4px; border: 1px solid #eee; }}
 .chart-caption {{ margin-top: 10px; font-size: 0.85rem; color: #888; font-style: italic; }}
 /* PRICING */
 #pricing {{ background-color: #fff; padding-top: 60px; scroll-margin-top: 60px; }}
 .pricing-grid {{ display: flex; justify-content: center; gap: 30px; margin-top: 40px; flex-wrap: wrap; }}
-.pricing-card {{
-background: #fff; border: 1px solid #e1e1e1; border-radius: 12px; padding: 40px;
-width: 380px; display: flex; flex-direction: column;
-transition: transform 0.3s, box-shadow 0.3s;
-}}
+.pricing-card {{ background: #fff; border: 1px solid #e1e1e1; border-radius: 12px; padding: 40px; width: 380px; display: flex; flex-direction: column; transition: transform 0.3s, box-shadow 0.3s; }}
 .pricing-card:hover {{ transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: #f5a623; }}
 .pricing-card.black {{ background: #111; color: #fff; border: 1px solid #111; }}
 .pricing-card.black h3, .pricing-card.black .price, .pricing-card.black p, .pricing-card.black li {{ color: #fff; }}
@@ -275,9 +268,7 @@ transition: transform 0.3s, box-shadow 0.3s;
 .faq-item h4 {{ font-size: 1.1rem; margin-bottom: 12px; font-weight: 700; color: #111; }}
 .faq-item p {{ font-size: 0.95rem; color: #666; }}
 /* FOOTER */
-.landing-footer {{ 
-background: #111; color: #ffffff; padding: 60px 5%; text-align: center; border-top: 1px solid #222; margin-bottom: 0 !important; 
-}}
+.landing-footer {{ background: #111; color: #ffffff; padding: 60px 5%; text-align: center; border-top: 1px solid #222; margin-bottom: 0 !important; }}
 .landing-footer p {{ font-size: 0.85rem; margin-bottom: 10px; color: #ffffff; }}
 .landing-footer a {{ color: #ffffff; text-decoration: none; opacity: 0.8; }}
 .landing-footer a:hover {{ opacity: 1; }}
@@ -285,21 +276,10 @@ background: #111; color: #ffffff; padding: 60px 5%; text-align: center; border-t
 </style>
 """
 
-# --- PART 2: LANDING PAGE BODY (HTML) ---
-# NOTE: Removed <button> tags and replaced with <a> tags to enable clickable links.
+# FLUSH LEFT HTML
 LANDING_BODY = f"""
 <div id="landing-root">
-<div class="sticky-header" id="top">
-<a href="#top" class="logo-container">
-<img src="{logo_src}" class="logo-img" alt="Benchmark3x" />
-</a>
-<nav>
-<a href="#model">Model</a>
-<a href="#pricing">Pricing</a>
-<a href="#faq">FAQ</a>
-<a href="#" class="nav-login"><span class="lock-icon">🔒</span> Sign In</a>
-</nav>
-</div>
+{HEADER_HTML}
 <main>
 <section class="hero">
 <div class="hero-content-wrapper">
@@ -492,6 +472,104 @@ During the 2020 crash, SPXL drew down over -70%. Recovering from a -70% loss req
 </div>
 """
 
-# --- INJECT CONTENT VIA MARKDOWN ---
-# Combining the Modular CSS and the Body HTML
-st.markdown(LANDING_CSS + LANDING_BODY, unsafe_allow_html=True)
+# --- PAGE 2: LOGIN PAGE STYLES ---
+LOGIN_CSS = f"""
+<style>
+/* LOGIN SPECIFIC STYLES */
+/* MODIFIED: Force background to white (was gray) */
+.stApp {{
+    background-color: #ffffff !important;
+}}
+
+/* Target the center column we create */
+div[data-testid="column"]:nth-of-type(2) {{
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 50px;
+}}
+
+/* Style the buttons to look like social logins */
+.social-btn {{
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    color: white !important; /* Forces text to be white */
+    font-size: 1.1rem; /* Increased size by 50% */
+}}
+.google-btn {{ background-color: #4285F4; }}
+.facebook-btn {{ background-color: #3b5998; }}
+.social-btn:hover {{ opacity: 0.9; color: white !important; }}
+
+/* MODIFIED: Increased font size by 50% */
+.login-header {{ font-size: 2.5rem; font-weight: 600; margin-bottom: 20px; color: #333; }}
+.divider {{ margin: 20px 0; border-top: 1px solid #eee; }}
+</style>
+"""
+
+# --- MAIN APP LOGIC (ROUTING) ---
+def render_landing_page():
+    # Inject Shared + Landing CSS
+    st.markdown(SHARED_CSS + LANDING_CSS, unsafe_allow_html=True)
+    # Inject Landing HTML (which includes the header)
+    st.markdown(LANDING_BODY, unsafe_allow_html=True)
+
+def render_login_page():
+    # Inject Shared + Login CSS
+    st.markdown(SHARED_CSS + LOGIN_CSS, unsafe_allow_html=True)
+    
+    # Inject the Sticky Header (so it stays on top)
+    st.markdown(HEADER_HTML, unsafe_allow_html=True)
+    
+    # Create the "Card" Layout using Columns
+    # col1 = spacer, col2 = card (fixed width approx), col3 = spacer
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    
+    with col2:
+        # Added spacer for visual separation
+        st.markdown('<div style="height: 2in;"></div>', unsafe_allow_html=True)
+        # We manually build the visual elements of the card
+        st.markdown('<div class="login-header">Sign In With Your Email</div>', unsafe_allow_html=True)
+        
+        # Social Buttons (Visual Only)
+        st.markdown("""
+        <a href="#" class="social-btn google-btn">G &nbsp; Sign In with Google</a>
+        <a href="#" class="social-btn facebook-btn">f &nbsp; Sign In with Facebook</a>
+        <div class="divider"></div>
+        """, unsafe_allow_html=True)
+        
+        # Streamlit Inputs
+        email = st.text_input("Email", placeholder="name@example.com")
+        password = st.text_input("Password", type="password", placeholder="Password")
+        
+        remember = st.checkbox("Remember me")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        if st.button("Sign In", type="primary", use_container_width=True):
+            st.success("Login logic would trigger here.")
+            
+        st.markdown("""
+        <div style="text-align: center; margin-top: 15px; font-size: 0.9rem;">
+            <a href="#" style="color: #4285F4; text-decoration: none;">Forgot Your Password?</a>
+            <br><br>
+            Don't have an account? <a href="#" style="color: #4285F4; text-decoration: none;">Sign Up</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --- ROUTER ---
+# Check the URL query param "?page=..."
+# If not present, default to "landing"
+query_params = st.query_params
+current_page = query_params.get("page", "landing")
+
+if current_page == "login":
+    render_login_page()
+else:
+    render_landing_page()
