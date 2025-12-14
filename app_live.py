@@ -17,35 +17,50 @@ def ensure_chart_exists():
         import matplotlib.pyplot as plt
         import numpy as np
 
-        np.random.seed(42)
-        days = 252 * 5
+        # Setup for a "Regime Filter" style chart (Long term with vertical bands)
+        np.random.seed(101) 
+        days = 2000
         x = np.arange(days)
-        returns = np.random.normal(0.0008, 0.015, days)
-        crash_start = int(days * 0.75)
-        crash_end = int(days * 0.85)
-        returns[crash_start:crash_end] = np.random.normal(-0.003, 0.03, crash_end - crash_start)
-        price_path = 100 * np.cumprod(1 + returns)
-        model_path = price_path.copy()
-        cash_level = model_path[crash_start]
-        model_path[crash_start:] = cash_level
+        
+        # Generate a "Market" line that goes up but has volatility
+        returns = np.random.normal(0.0006, 0.012, days)
+        price_path = 1000 * np.cumprod(1 + returns)
 
-        plt.figure(figsize=(8, 4.5))
-        plt.plot(x, price_path, color='#e74c3c', linewidth=1.5, alpha=0.9, label='Buy & Hold (3x)')
-        plt.plot(x, model_path, color='#f5a623', linewidth=2.5, label='Benchmark3x')
-        plt.title("Volatility Regime Filter: Crash Avoidance", fontsize=12, fontweight='bold', color='#333', pad=15)
-        plt.legend(loc='lower left', fontsize=9, frameon=True, fancybox=True, framealpha=0.9, borderpad=0.8)
-        plt.grid(True, alpha=0.15, linestyle='--')
+        plt.figure(figsize=(10, 5)) 
+        
+        # Plot the Market Line
+        plt.plot(x, price_path, color='#111111', linewidth=1.2, label='Market Index')
+
+        # Add "Regime" Bands (Vertical Highlights)
+        # Pink = Bear/Crash (Cash Mode)
+        plt.axvspan(200, 350, color='#e74c3c', alpha=0.15, label='Volatility Regime (Cash)')
+        plt.axvspan(900, 1000, color='#e74c3c', alpha=0.15)
+        plt.axvspan(1400, 1600, color='#e74c3c', alpha=0.15)
+        
+        # Yellow = Chop/Warning
+        plt.axvspan(600, 650, color='#f1c40f', alpha=0.15, label='Choppy/Warning')
+        plt.axvspan(1850, 1900, color='#f1c40f', alpha=0.15)
+
+        # Styling 
+        plt.title("Historical Regime Detection (2015-2025)", fontsize=12, fontweight='bold', color='#333', loc='left', pad=15)
+        plt.legend(loc='upper left', fontsize=8, frameon=True, fancybox=False, framealpha=0.95)
+        
+        # Clean up axes
         ax = plt.gca()
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_color('#ccc')
-        ax.spines['bottom'].set_color('#ccc')
-        plt.xticks([0, int(days/2), days], ['2020', '2022', '2025'], color='#888', fontsize=8)
-        current_yticks = ax.get_yticks()
-        ax.set_yticklabels([f"{int(y)}%" for y in current_yticks], color='#888', fontsize=8)
+        ax.spines['left'].set_color('#888')
+        ax.spines['bottom'].set_color('#888')
+        
+        # Grid
+        plt.grid(True, axis='y', alpha=0.2, linestyle='-')
+        plt.grid(True, axis='x', alpha=0.1, linestyle='-')
+
+        # Formatting
         plt.tight_layout()
         plt.savefig(chart_path, dpi=150, bbox_inches='tight')
         plt.close()
+        
     except Exception as e:
         st.warning(f"Could not generate chart: {e}")
 
@@ -111,7 +126,7 @@ landing_page_html = """
         .container { max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative; z-index: 2; }
         
         h2 { font-size: 2.5rem; color: #111; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -1px; }
-        .section-subtitle { text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+        .section-subtitle { text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6; }
         p { line-height: 1.6; color: #555; }
         
         /* Global Section Spacing */
@@ -195,12 +210,10 @@ landing_page_html = """
             position: absolute;
             bottom: 0;
             left: 33%;
-            width: 100%; /* Ensure it spans fully */
+            width: 100%; 
             height: 300px; 
             
-            /* EXTENDED: 40 Bars defined here to cover ~3200px width.
-               Pattern: Mostly Grey, occasional Orange.
-            */
+            /* 40 Bars defined here */
             background-image: 
                 linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 1 */
                 linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 2 */
@@ -243,7 +256,6 @@ landing_page_html = """
                 linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 39 */
                 linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)); /* 40 */
 
-            /* HEIGHTS: Random % for 40 bars */
             background-size: 
                 40px 25%, 40px 55%, 40px 40%, 40px 75%, 40px 90%, 
                 40px 45%, 40px 20%, 40px 60%, 40px 85%, 40px 35%, 
@@ -254,7 +266,6 @@ landing_page_html = """
                 40px 90%, 40px 50%, 40px 35%, 40px 60%, 40px 25%,
                 40px 80%, 40px 40%, 40px 55%, 40px 30%, 40px 65%;
 
-            /* POSITION: 0px, 80px, 160px... up to 3120px */
             background-position: 
                 0px bottom, 80px bottom, 160px bottom, 240px bottom, 320px bottom, 
                 400px bottom, 480px bottom, 560px bottom, 640px bottom, 720px bottom, 
@@ -423,8 +434,7 @@ landing_page_html = """
             <div class="container">
                 <h2>The Model, The Machine</h2>
                 <p class="section-subtitle">
-                    Holding 3x leveraged ETFs long-term is mathematically dangerous due to "volatility decay". 
-                    Benchmark3x is not a "Buy & Hold" strategy; it is a <strong>Volatility Regime Filter</strong> designed to protect capital.
+                    Our engine is a machine learning tool trained on hundreds of predictors and backtested with decades of market data. The key to successful leverage isn't just knowing when to enter the market, but knowing when to get out and sit on the sidelines. Our proprietary system picks not only the high-probability days to invest, but more importantly, signals when to exit to avoid the worst drawdowns. <strong>Two models, two purposes—resulting in incredible CAGR performance.</strong>
                 </p>
                 
                 <div class="model-grid">
