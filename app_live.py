@@ -87,6 +87,10 @@ computer_src = f"data:image/jpeg;base64,{computer_data}" if computer_data else "
 chart_data = get_base64_image("downturn_chart.jpg")
 chart_src = f"data:image/jpeg;base64,{chart_data}" if chart_data else "https://via.placeholder.com/600x350.png?text=Chart+Generation+Failed"
 
+# --- NEW: LOAD GEARS IMAGE ---
+gears_data = get_base64_image("gears.png")
+gears_src = f"data:image/png;base64,{gears_data}" if gears_data else ""
+
 # --- HTML & CSS TEMPLATE ---
 landing_page_html = """
 <!DOCTYPE html>
@@ -104,7 +108,7 @@ landing_page_html = """
         /* UTILITIES */
         .orange { color: #f5a623; }
         .text-center { text-align: center; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 5%; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative; z-index: 2; }
         
         h2 { font-size: 2.5rem; color: #111; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -1px; }
         .section-subtitle { text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 60px; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.6; }
@@ -160,88 +164,120 @@ landing_page_html = """
             z-index: 10;
         }
         
-        /* BACKGROUND: CIRCLE MATRIX REVAMP */
-        /* Inspired by QuantConnect: High density dots, fading out */
+        /* BACKGROUND: CIRCLE MATRIX (TRIANGLE + FADE) */
         .hero::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 50%; /* Cover left half */
-            height: 100%;
-            /* Radial Gradient creates the dots.
-               #e0e0e0 = light grey.
-               Transparent = space between.
-            */
-            background-image: radial-gradient(circle, #d0d0d0 3px, transparent 3.5px);
-            background-size: 30px 30px; /* Dense grid */
+            width: 35%;
+            height: 600px;
             
-            /* The Mask:
-               This creates the "Transitioning" effect. 
-               It is opaque (visible) at top-left and transparent (invisible) at bottom-right of the region.
-               This makes the dots appear to shrink and disappear.
-            */
-            mask-image: radial-gradient(circle at 0% 0%, black 10%, transparent 70%);
-            -webkit-mask-image: radial-gradient(circle at 0% 0%, black 10%, transparent 70%);
+            /* The Dots */
+            background-image: radial-gradient(circle, #d0d0d0 5px, transparent 6px);
+            background-size: 30px 30px;
             
-            opacity: 0.8;
+            /* 1. The Hard Shape (Triangle) */
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            
+            /* 2. The Soft Gradient Fade (Inside the Triangle) */
+            mask-image: linear-gradient(135deg, black 20%, transparent 100%);
+            -webkit-mask-image: linear-gradient(135deg, black 20%, transparent 100%);
+            
+            opacity: 0.6; 
             z-index: 1;
             pointer-events: none;
         }
         
-        /* BACKGROUND: BARS REVAMP */
-        /* Lower on left, Taller on right */
+        /* BACKGROUND: BARS (EXTENDED TO RIGHT EDGE) */
         .hero::after {
             content: '';
             position: absolute;
             bottom: 0;
-            left: 33%; /* Start 1/3 across screen */
-            width: 67%; /* Fill remaining width */
-            height: 250px; /* Maximum height */
+            left: 33%;
+            width: 100%; /* Ensure it spans fully */
+            height: 300px; 
             
-            /* Bar Pattern: Mixed Grey and rare Orange */
-            background: repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 40px,
-                rgba(240, 240, 240, 0.8) 40px,
-                rgba(240, 240, 240, 0.8) 80px,   /* Grey Bar 1 */
-                
-                transparent 80px,
-                transparent 120px,
-                rgba(240, 240, 240, 0.8) 120px,
-                rgba(240, 240, 240, 0.8) 160px,  /* Grey Bar 2 */
-                
-                transparent 160px,
-                transparent 200px,
-                rgba(240, 240, 240, 0.8) 200px,
-                rgba(240, 240, 240, 0.8) 240px,  /* Grey Bar 3 */
-                
-                transparent 240px,
-                transparent 280px,
-                rgba(240, 240, 240, 0.8) 280px,
-                rgba(240, 240, 240, 0.8) 320px,  /* Grey Bar 4 */
-
-                transparent 320px,
-                transparent 360px,
-                rgba(255, 230, 200, 0.6) 360px,  /* Orange Bar (Rare) */
-                rgba(255, 230, 200, 0.6) 400px
-            );
-            
-            /* CLIP PATH:
-               This physically cuts the container to shape the "Growth" trend.
-               0% 60% = Starts at 60% height on the left (Lower)
-               100% 0% = Ends at 0% from top (Full Height) on the right (Taller)
-               100% 100% = Bottom Right corner
-               0% 100% = Bottom Left corner
+            /* EXTENDED: 40 Bars defined here to cover ~3200px width.
+               Pattern: Mostly Grey, occasional Orange.
             */
-            clip-path: polygon(0 60%, 100% 0, 100% 100%, 0% 100%);
-            
+            background-image: 
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 1 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 2 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 3 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 4 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 5 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 6 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 7 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 8 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 9 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 10 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 11 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 12 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 13 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 14 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 15 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 16 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 17 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 18 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 19 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 20 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 21 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 22 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 23 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 24 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 25 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 26 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 27 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 28 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 29 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 30 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 31 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 32 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 33 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 34 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 35 */
+                linear-gradient(to bottom, rgba(255, 200, 150, 0.4), rgba(255, 200, 150, 0.9)), /* 36 (Orange) */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 37 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 38 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)), /* 39 */
+                linear-gradient(to bottom, rgba(240, 240, 240, 0.4), rgba(240, 240, 240, 0.9)); /* 40 */
+
+            /* HEIGHTS: Random % for 40 bars */
+            background-size: 
+                40px 25%, 40px 55%, 40px 40%, 40px 75%, 40px 90%, 
+                40px 45%, 40px 20%, 40px 60%, 40px 85%, 40px 35%, 
+                40px 50%, 40px 30%, 40px 70%, 40px 45%, 40px 95%,
+                40px 55%, 40px 25%, 40px 65%, 40px 40%, 40px 80%,
+                40px 60%, 40px 35%, 40px 75%, 40px 20%, 40px 50%,
+                40px 85%, 40px 45%, 40px 65%, 40px 30%, 40px 70%,
+                40px 90%, 40px 50%, 40px 35%, 40px 60%, 40px 25%,
+                40px 80%, 40px 40%, 40px 55%, 40px 30%, 40px 65%;
+
+            /* POSITION: 0px, 80px, 160px... up to 3120px */
+            background-position: 
+                0px bottom, 80px bottom, 160px bottom, 240px bottom, 320px bottom, 
+                400px bottom, 480px bottom, 560px bottom, 640px bottom, 720px bottom, 
+                800px bottom, 880px bottom, 960px bottom, 1040px bottom, 1120px bottom,
+                1200px bottom, 1280px bottom, 1360px bottom, 1440px bottom, 1520px bottom,
+                1600px bottom, 1680px bottom, 1760px bottom, 1840px bottom, 1920px bottom,
+                2000px bottom, 2080px bottom, 2160px bottom, 2240px bottom, 2320px bottom,
+                2400px bottom, 2480px bottom, 2560px bottom, 2640px bottom, 2720px bottom,
+                2800px bottom, 2880px bottom, 2960px bottom, 3040px bottom, 3120px bottom;
+
+            background-repeat: no-repeat;
             z-index: 1;
             pointer-events: none;
         }
 
-        .hero-text { max-width: 45%; margin-top: 10px; position: relative; }
+        /* TEXT SHIFT */
+        .hero-text { 
+            max-width: 45%; 
+            margin-top: 10px; 
+            margin-left: 100px; /* Shift text 1" right */
+            position: relative; 
+        }
+        
         h1 { font-size: 3.8rem; line-height: 1.1; color: #111; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
         .hero-p { font-size: 1.2rem; margin-bottom: 30px; max-width: 520px; color: #555; }
         .btn-primary {
@@ -261,11 +297,38 @@ landing_page_html = """
 
         /* MODEL SECTION */
         #model { 
-            background-color: #f8f9fa; border-top: 1px solid #eee; 
-            padding-top: 60px; padding-bottom: 80px; 
-            scroll-margin-top: 60px; width: 100%;
+            background-color: #f8f9fa; 
+            border-top: 1px solid #eee; 
+            padding-top: 60px; 
+            padding-bottom: 80px; 
+            scroll-margin-top: 60px; 
+            width: 100%;
+            position: relative; /* Essential for the gears background absolute position */
+            overflow: hidden;   /* Clip the gears so they don't spill out */
         }
-        .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: start; }
+        
+        /* --- GEARS BACKGROUND STYLING (1.25X SIZE) --- */
+        #model::before {
+            content: '';
+            position: absolute;
+            top: -15%; /* Adjusted for 1.25x */
+            right: -15%; /* Adjusted for 1.25x so it anchors nicely */
+            width: 62.5%; /* 1.25x original size */
+            height: 125%; 
+            
+            background-image: url('{GEARS_SRC}');
+            background-repeat: no-repeat;
+            background-position: center right; 
+            background-size: contain; 
+            
+            /* The Magic: Make it super subtle */
+            opacity: 0.05; 
+            filter: grayscale(100%); /* Ensure it is purely grey/black */
+            pointer-events: none; 
+            z-index: 0; 
+        }
+
+        .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: start; position: relative; z-index: 2; }
         .model-step { margin-bottom: 30px; display: flex; gap: 20px; }
         
         /* UPDATED: No outline */
@@ -549,6 +612,7 @@ landing_page_html = """
 landing_page_html = landing_page_html.replace("{LOGO_SRC}", logo_src)
 landing_page_html = landing_page_html.replace("{COMPUTER_SRC}", computer_src)
 landing_page_html = landing_page_html.replace("{CHART_SRC}", chart_src)
+landing_page_html = landing_page_html.replace("{GEARS_SRC}", gears_src)
 
 # --- THE FIX FOR SCROLLBARS ---
 components.html(landing_page_html, height=7800, scrolling=False)
